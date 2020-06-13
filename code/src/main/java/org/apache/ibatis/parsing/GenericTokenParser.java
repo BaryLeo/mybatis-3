@@ -16,20 +16,27 @@
 package org.apache.ibatis.parsing;
 
 /**
+ * 通用解析器，获取值
+ * 因为token的解析需要外部传一个handler进来处理，所以这部分的代码，是通用的，策略模式
  * @author Clinton Begin
  */
 public class GenericTokenParser {
 
+  //是#{  或者 ${
   private final String openToken;
+  //是}
   private final String closeToken;
+  //具体看是哪种
   private final TokenHandler handler;
 
   public GenericTokenParser(String openToken, String closeToken, TokenHandler handler) {
     this.openToken = openToken;
     this.closeToken = closeToken;
+    //不同handler能匹配不一样的open/close Token
     this.handler = handler;
   }
 
+  //然后就是匹配内容了
   public String parse(String text) {
     if (text == null || text.isEmpty()) {
       return "";
@@ -74,6 +81,7 @@ public class GenericTokenParser {
           builder.append(src, start, src.length - start);
           offset = src.length;
         } else {
+          // <x> closeToken 找到，将 expression 提交给 handler 处理 ，并将处理结果添加到 builder 中
           builder.append(handler.handleToken(expression.toString()));
           offset = end + closeToken.length();
         }

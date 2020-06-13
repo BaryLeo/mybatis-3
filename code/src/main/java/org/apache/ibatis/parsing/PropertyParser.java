@@ -18,6 +18,7 @@ package org.apache.ibatis.parsing;
 import java.util.Properties;
 
 /**
+ * 动态属性解析器
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -51,23 +52,39 @@ public class PropertyParser {
   }
 
   public static String parse(String string, Properties variables) {
+    //handler持有值
     VariableTokenHandler handler = new VariableTokenHandler(variables);
+    //$类型的，属于动态匹配
     GenericTokenParser parser = new GenericTokenParser("${", "}", handler);
+    //开始动态解析
     return parser.parse(string);
   }
 
   private static class VariableTokenHandler implements TokenHandler {
+    /**
+     * 变量 Properties 对象
+     */
     private final Properties variables;
+
     private final boolean enableDefaultValue;
+    /**
+     * 默认值的分隔符。默认为 {@link #KEY_DEFAULT_VALUE_SEPARATOR} ，即 ":" 。
+     */
     private final String defaultValueSeparator;
 
     private VariableTokenHandler(Properties variables) {
       this.variables = variables;
       this.enableDefaultValue = Boolean.parseBoolean(getPropertyValue(KEY_ENABLE_DEFAULT_VALUE, ENABLE_DEFAULT_VALUE));
+      //传入的是一个默认的分隔符，如果存在自定的分隔符，就会使用自定的
+      //public String getProperty(String key, String defaultValue) {
+      //        String val = getProperty(key);
+      //        return (val == null) ? defaultValue : val;
+      //    }
       this.defaultValueSeparator = getPropertyValue(KEY_DEFAULT_VALUE_SEPARATOR, DEFAULT_VALUE_SEPARATOR);
     }
 
     private String getPropertyValue(String key, String defaultValue) {
+      //如果值为null，则返回设定的默认值
       return (variables == null) ? defaultValue : variables.getProperty(key, defaultValue);
     }
 
@@ -76,6 +93,7 @@ public class PropertyParser {
       if (variables != null) {
         String key = content;
         if (enableDefaultValue) {
+          //找到分隔符的位置
           final int separatorIndex = content.indexOf(defaultValueSeparator);
           String defaultValue = null;
           if (separatorIndex >= 0) {
@@ -90,6 +108,7 @@ public class PropertyParser {
           return variables.getProperty(key);
         }
       }
+      //等于null直接返回
       return "${" + content + "}";
     }
   }
